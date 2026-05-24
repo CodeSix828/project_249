@@ -1,0 +1,5 @@
+├── tools/                  # 工具层
+│   ├── base.py             # 工具基类
+│   ├── web_search.py       # 搜索工具
+│   ├── code_exec.py        # 代码执行器
+│   └── file_ops.py         # 文件操作

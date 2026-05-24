@@ -1,0 +1,5 @@
+├── memory/                	 # 记忆管理
+│   ├── base.py
+│   ├── short_term.py     	  # 对话缓存
+│   ├── long_term.py      	  # 向量数据库封装
+│   └── vector_store.py

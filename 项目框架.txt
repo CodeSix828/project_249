@@ -1,0 +1,38 @@
+my_agent_project/
+├── agent/                  # 核心：Agent定义与编排
+│   ├── base.py             # 抽象基类
+│   ├── react_agent.py      # ReAct风格实现
+│   └── plan_execute.py     # 规划-执行模式
+├── tools/                  # 工具层
+│   ├── base.py             # 工具基类
+│   ├── web_search.py       # 搜索工具
+│   ├── code_exec.py        # 代码执行器
+│   └── file_ops.py         # 文件操作
+├── memory/                 # 记忆管理
+│   ├── base.py
+│   ├── short_term.py       # 对话缓存
+│   ├── long_term.py        # 向量数据库封装
+│   └── vector_store.py
+├── llms/                   # 大模型适配
+│   ├── base.py
+│   ├── openai_adapter.py
+│   └── local_model.py
+├── prompts/                # 提示词工程
+│   ├── system_prompts.py   # 系统提示模板
+│   └── few_shots.py
+├── schemas/                # 数据实体
+│   ├── message.py          # 消息格式
+│   ├── step.py             # 执行步骤
+│   └── result.py
+├── chains/                 # 可复用的执行链
+│   ├── rag_chain.py
+│   └── reflection_chain.py
+├── utils/                  # 通用工具
+│   ├── logger.py
+│   └── parser.py
+├── config/                 # 配置管理
+│   ├── settings.py
+│   └── .env.example
+├── tests/                  # 测试
+├── run.py                  # 主入口
+└── README.md

@@ -1,0 +1,4 @@
+├── schemas/                # 数据实体
+│   ├── message.py          # 消息格式
+│   ├── step.py             # 执行步骤
+│   └── result.py

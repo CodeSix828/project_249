@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "project_249"
+version = "0.1.0"
+description = "功能完整的 AI Agent 框架，支持 RAG、长短期记忆、工具调用和流式输出"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "CodeSix828" }
+]
+license = { text = "MIT" }
+keywords = ["ai", "agent", "llm", "rag", "memory"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "openai>=1.0.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+    "tiktoken>=0.5.0",
+    "numpy>=1.20.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/CodeSix828/project_249"
+"Repository" = "https://github.com/CodeSix828/project_249"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "project_249",
+    "project_249.*",
+]
+
+[tool.setuptools.package-data]
+"*" = ["*.txt", "*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]

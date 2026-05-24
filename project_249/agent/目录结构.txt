@@ -1,0 +1,4 @@
+├── agent/                  # 核心：Agent定义与编排
+│   ├── base.py             # 抽象基类
+│   ├── react_agent.py      # ReAct风格实现
+│   └── plan_execute.py     # 规划-执行模式

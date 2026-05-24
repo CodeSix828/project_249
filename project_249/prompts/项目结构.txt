@@ -1,0 +1,3 @@
+├── prompts/                # 提示词工程
+│   ├── system_prompts.py   # 系统提示模板
+│   └── few_shots.py
