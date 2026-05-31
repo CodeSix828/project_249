@@ -37,6 +37,16 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
 ]
+web = [
+    "gradio>=4.0.0",
+]
+build = [
+    "pyinstaller>=6.0.0",
+]
+
+[project.scripts]
+project-249 = "project_249.cli:main"
+p249 = "project_249.cli:main"
 
 [project.urls]
 "Homepage" = "https://github.com/CodeSix828/project_249"

@@ -2,10 +2,25 @@ from pydantic import BaseModel, Field
 from pathlib import Path
 from dotenv import dotenv_values
 import os
+import sys
+
+
+def is_frozen() -> bool:
+    return getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+
+
+def get_executable_dir() -> Path:
+    if is_frozen():
+        return Path(sys.executable).parent
+    return Path(__file__).resolve().parent.parent
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_ENV_PATH = BASE_DIR / "config" / ".env"
+
+EXE_ENV_PATH = get_executable_dir() / ".env"
+
+ENV_PATH = EXE_ENV_PATH if is_frozen() and EXE_ENV_PATH.exists() else DEFAULT_ENV_PATH
 
 
 class Settings(BaseModel):
@@ -76,8 +91,16 @@ def load_settings(
         file_config = _load_from_env_file(Path(env_path))
         configs.update(file_config)
     else:
-        file_config = _load_from_env_file(DEFAULT_ENV_PATH)
-        configs.update(file_config)
+        if is_frozen():
+            if EXE_ENV_PATH.exists():
+                file_config = _load_from_env_file(EXE_ENV_PATH)
+                configs.update(file_config)
+            else:
+                file_config = _load_from_env_file(DEFAULT_ENV_PATH)
+                configs.update(file_config)
+        else:
+            file_config = _load_from_env_file(DEFAULT_ENV_PATH)
+            configs.update(file_config)
     
     if use_env_vars:
         env_config = _load_from_env_vars()

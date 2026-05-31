@@ -4,6 +4,9 @@ import sys
 from .settings import (
     BASE_DIR,
     DEFAULT_ENV_PATH,
+    EXE_ENV_PATH,
+    ENV_PATH,
+    is_frozen,
     Settings,
     load_settings,
     _settings as _global_settings,
@@ -71,6 +74,8 @@ HELP_MESSAGES = {
 def get_env_path(custom_path: Optional[Path] = None) -> Path:
     if custom_path:
         return Path(custom_path)
+    if is_frozen():
+        return EXE_ENV_PATH
     return DEFAULT_ENV_PATH
 
 

@@ -1,38 +1,54 @@
-my_agent_project/
-├── agent/                  # 核心：Agent定义与编排
-│   ├── base.py             # 抽象基类
-│   ├── react_agent.py      # ReAct风格实现
-│   └── plan_execute.py     # 规划-执行模式
-├── tools/                  # 工具层
-│   ├── base.py             # 工具基类
-│   ├── web_search.py       # 搜索工具
-│   ├── code_exec.py        # 代码执行器
-│   └── file_ops.py         # 文件操作
-├── memory/                 # 记忆管理
-│   ├── base.py
-│   ├── short_term.py       # 对话缓存
-│   ├── long_term.py        # 向量数据库封装
-│   └── vector_store.py
-├── llms/                   # 大模型适配
-│   ├── base.py
-│   ├── openai_adapter.py
-│   └── local_model.py
-├── prompts/                # 提示词工程
-│   ├── system_prompts.py   # 系统提示模板
-│   └── few_shots.py
-├── schemas/                # 数据实体
-│   ├── message.py          # 消息格式
-│   ├── step.py             # 执行步骤
-│   └── result.py
-├── chains/                 # 可复用的执行链
-│   ├── rag_chain.py
-│   └── reflection_chain.py
-├── utils/                  # 通用工具
-│   ├── logger.py
-│   └── parser.py
+project_249/
+├── agent/                  # Agent 实现
+│   ├── base.py             # BaseAgent 抽象基类
+│   ├── simple_chat.py      # SimpleChatAgent 实现
+│   ├── react_agent.py      # ReAct 模式 Agent
+│   └── plan_execute.py     # 规划执行模式 Agent
+├── llms/                   # LLM 适配层
+│   ├── base.py             # BaseLLM 抽象基类
+│   ├── deepseek_adapter.py # DeepSeek 适配器
+│   └── deepseek_embedding.py  # DeepSeek Embedding
+├── memory/                 # 记忆系统
+│   ├── base.py             # 基础定义和策略枚举
+│   ├── short_term.py       # 短期记忆
+│   ├── long_term.py        # 长期记忆
+│   └── summarizer.py       # 摘要生成器
+├── storage/                # 存储层
+│   ├── database.py         # 向量数据库
+│   └── RAG/                # RAG 组件
+│       ├── text_splitter.py    # 文档分块器
+│       ├── embeddings.py       # Embedding 服务
+│       ├── retriever.py        # 检索器
+│       └── vector_store.py     # 向量存储
+├── chains/                 # 链实现
+│   ├── rag_chain.py        # RAG 链
+│   └── reflection_chain.py # 反思链
+├── tools/                  # 工具系统
+│   ├── base.py             # 工具注册和调用
+│   ├── tools_list.py       # 工具定义
+│   ├── weather_query.py    # 天气查询
+│   ├── file_ops.py         # 文件操作
+│   └── ...                 # 其他工具
 ├── config/                 # 配置管理
-│   ├── settings.py
-│   └── .env.example
-├── tests/                  # 测试
-├── run.py                  # 主入口
-└── README.md
+│   ├── settings.py         # Pydantic 配置
+│   ├── .env.example        # 环境变量模板
+│   └── .env                # 你的配置（不提交到 git）
+├── utils/                  # 工具函数
+│   ├── logger.py           # 统一日志系统
+│   ├── token_counter.py    # Token 计数
+│   └── typewriter.py       # 打字机效果（旧版流式）
+├── prompts/                # 提示词
+│   ├── personas.py         # 角色设定
+│   └── system_prompts.py   # 系统提示词
+├── tests/                  # 单元测试
+│   ├── conftest.py         # pytest 配置
+│   ├── test_config.py      # 配置测试
+│   ├── test_memory.py      # 记忆测试
+│   ├── test_tools.py       # 工具测试
+│   ├── test_logger.py      # 日志测试
+│   ├── test_agent.py       # Agent 测试
+│   └── test_text_splitter.py  # 分块器测试
+├── requirements.txt        # 依赖列表
+├── run.py                  # 命令行运行入口
+├── run_web.py              # Web 服务入口
+└── README.md               # 本文档
