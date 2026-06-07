@@ -845,6 +845,13 @@ def chat():
 
 ## 更新日志
 
+### v1.2.1 (2026-06-07)
+- 修复 write_to_file 工具，新增 overwrite 参数支持覆盖或追加模式
+- 增强 check_path 工具，新增 preview_lines 和 preview_full 参数
+- 新增 get_current_time 和 get_current_date 时间获取工具
+- 更新工具列表，支持新工具参数
+- 所有 58 个测试通过
+
 ### v1.2.0 (2026-06-07)
 - 完善 ReActAgent 工具调用集成
 - 完善 PlanExecuteAgent 工具调用集成
