@@ -2,10 +2,13 @@ from typing import Optional, Iterator, List, Dict, Any, Callable
 from enum import Enum
 from .base import BaseAgent
 from ..llms.deepseek_adapter import DeepSeekAdapter
+from ..llms.deepseek_function_call import DeepSeekCallTool
 from ..memory.base import Strategy
 from ..memory.short_term import ShortTermMemory
 from ..memory.long_term import LongTermMemory
 from ..prompts.personas import get_persona
+from ..tools.tools_list import tools
+from ..tools.base import parse_function_call
 from ..utils.logger import Logger, LogHandler, LogCategory
 
 
@@ -71,6 +74,7 @@ class PlanExecuteAgent(BaseAgent):
         log_handler: Optional[LogHandler] = None,
         enabled_logs: Optional[list[str]] = None,
         max_retries: int = 3,
+        stream_output: bool = True,
     ):
         """
         初始化 Plan-Execute Agent。
@@ -82,9 +86,11 @@ class PlanExecuteAgent(BaseAgent):
             log_handler: 自定义日志处理器
             enabled_logs: 启用的日志类别
             max_retries: 任务失败最大重试次数
+            stream_output: 是否启用流式输出
         """
         self.verbose = verbose
         self.max_retries = max_retries
+        self.stream_output = stream_output
         self.tasks: List[Task] = []
         
         enabled_categories = None
@@ -103,12 +109,12 @@ class PlanExecuteAgent(BaseAgent):
             self.memory = LongTermMemory(compare_type)
         
         self.llm = DeepSeekAdapter()
+        self.llm_tool = DeepSeekCallTool()
         
         persona = get_persona(persona_name="planner")
         system_prompt_content = persona["system_prompt"] if persona else self._default_planner_prompt()
         self.memory.historys = [
             {"role": "system", "content": system_prompt_content},
-            {"role": "user", "content": "你是一个任务规划专家，负责将复杂任务分解为可执行的子任务。"}
         ]
         
         self.logger.agent(f"Plan-Execute Agent 初始化完成 (memory={memory_type}, max_retries={max_retries})")
@@ -127,7 +133,7 @@ class PlanExecuteAgent(BaseAgent):
         {
             "task_id": "task_1",
             "description": "任务描述",
-            "dependencies": []  // 依赖的任务ID列表
+            "dependencies": []
         }
     ]
 }
@@ -140,7 +146,8 @@ class PlanExecuteAgent(BaseAgent):
 
     def _default_executor_prompt(self) -> str:
         """默认的执行器系统提示词"""
-        return """你是一个任务执行专家。
+        persona = get_persona(persona_name="executor")
+        return persona["system_prompt"] if persona else """你是一个任务执行专家。
 
 ## 你的职责
 根据任务描述，执行具体的操作并返回结果。
@@ -185,12 +192,10 @@ class PlanExecuteAgent(BaseAgent):
         import re
         import json
         
-        # 尝试提取 JSON
         json_pattern = r'\{[\s\S]*"tasks"[\s\S]*\}'
         match = re.search(json_pattern, response)
         
         if not match:
-            # 尝试更宽松的匹配
             json_pattern = r'\[.*\]'
             match = re.search(json_pattern, response)
         
@@ -217,13 +222,12 @@ class PlanExecuteAgent(BaseAgent):
             except Exception as e:
                 self.logger.warn(f"解析规划响应失败: {e}")
         
-        # 如果无法解析，返回单个任务
         self.logger.warn("无法解析任务规划，创建单个任务")
         return [Task(task_id="task_0", description=response, dependencies=[])]
 
     def _execute_task(self, task: Task) -> Any:
         """
-        执行单个任务。
+        执行单个任务（支持工具调用）。
         
         参数：
             task: 任务对象
@@ -234,20 +238,35 @@ class PlanExecuteAgent(BaseAgent):
         self.logger.agent(f"执行任务 {task.task_id}: {task.description}")
         task.status = TaskStatus.RUNNING
         
-        # 获取前置任务的结果作为上下文
         context = self._get_task_context(task)
         
         prompt = f"""任务：{task.description}
 
 {context}
 
-请执行这个任务并返回结果。"""
+请执行这个任务。如果需要使用工具（创建目录、查询天气等），请调用对应的工具。"""
         
         try:
-            result = self.llm.chat([
+            messages = [
                 {"role": "system", "content": self._default_executor_prompt()},
                 {"role": "user", "content": prompt}
-            ])
+            ]
+            
+            result = self.llm.chat(messages)
+            self.logger.tool(f"初步响应: {result[:100]}...")
+            
+            tool_messages = self._parse_and_execute_tools(result, [])
+            if tool_messages:
+                self.logger.tool(f"工具调用完成，继续处理...")
+                self.memory.historys.extend(tool_messages)
+                
+                messages.extend([
+                    {"role": "assistant", "content": result}
+                ])
+                messages.extend(tool_messages)
+                
+                result = self.llm.chat(messages)
+            
             task.result = result
             task.status = TaskStatus.COMPLETED
             self.logger.agent(f"任务 {task.task_id} 完成")
@@ -257,6 +276,55 @@ class PlanExecuteAgent(BaseAgent):
             task.error = str(e)
             self.logger.error(f"任务 {task.task_id} 失败: {e}")
             return None
+
+    def _parse_and_execute_tools(self, response: str, history: List[Dict]) -> List[Dict]:
+        """解析工具调用并执行"""
+        tool_messages = []
+        
+        import re
+        tool_pattern = r'<tool_call>([^|]+)\|({[^}]+})</tool_call>'
+        matches = re.findall(tool_pattern, response)
+        
+        if matches:
+            for tool_name, args_str in matches:
+                self.logger.tool(f"调用工具: {tool_name}")
+                
+                class ToolCallMessage:
+                    def __init__(self, name, args):
+                        self.tool_calls = [type('obj', (object,), {
+                            'id': f'tool_{tool_name}',
+                            'function': type('obj', (object,), {
+                                'name': name,
+                                'arguments': args
+                            })
+                        })()]
+                
+                msg = ToolCallMessage(tool_name, args_str)
+                results = parse_function_call(msg)
+                
+                if results:
+                    if isinstance(results, list):
+                        for r in results:
+                            self.logger.tool(f"工具结果: {str(r)[:100]}...")
+                            tool_messages.append(r)
+                    else:
+                        self.logger.tool(f"工具结果: {str(results)[:100]}...")
+                        tool_messages.append(results)
+        else:
+            self.logger.tool("尝试使用工具选择模型...")
+            call_tool_response = self.llm_tool.call_llm(
+                response, 
+                tools, 
+                history
+            )
+            
+            if call_tool_response.tool_calls:
+                self.logger.tool(f"工具选择模型决定使用工具: {call_tool_response.tool_calls}")
+                results = parse_function_call(call_tool_response)
+                if results:
+                    tool_messages.extend(results if isinstance(results, list) else [results])
+        
+        return tool_messages
 
     def _get_task_context(self, task: Task) -> str:
         """获取任务的前置上下文"""
@@ -301,7 +369,7 @@ class PlanExecuteAgent(BaseAgent):
         self.logger.agent("开始执行计划...")
         
         completed_count = 0
-        max_iterations = len(self.tasks) * 2  # 防止无限循环
+        max_iterations = len(self.tasks) * 2
         
         iteration = 0
         while completed_count < len(self.tasks) and iteration < max_iterations:
@@ -330,15 +398,9 @@ class PlanExecuteAgent(BaseAgent):
         self.memory.add({"role": "user", "content": user_input})
         self.logger.agent(f"用户输入: {user_input}")
         
-        # 规划阶段
         self.tasks = self._plan(user_input)
-        
-        # 执行阶段
         self._execute_plan()
-        
-        # 生成最终报告
         report = self._generate_execution_report()
-        
         self.memory.add({"role": "assistant", "content": report})
         
         return report
@@ -406,3 +468,6 @@ class PlanExecuteAgent(BaseAgent):
 
     def get_enabled_logs(self) -> list[str]:
         return [c.value for c in self.logger.get_enabled_categories()]
+
+    def set_stream_output(self, enabled: bool):
+        self.stream_output = enabled
