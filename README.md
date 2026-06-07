@@ -384,13 +384,25 @@ for chunk in chain.invoke_stream("请详细介绍 RAG 系统"):
     print(chunk, end="", flush=True)
 print()
 
-# 获取回答和上下文（便于调试）
+# 查看回答和上下文（便于调试）
 result = chain.invoke_with_context("RAG 如何实现？")
 print("回答:", result["answer"])
 print("使用的上下文:")
 for doc, score in result["contexts"]:
     print(f"  [相似度 {score:.2f}] {doc[:100]}...")
 ```
+
+### 增强版可视化 Web 界面
+
+```bash
+python run_web_enhanced.py
+```
+
+这个增强版界面提供：
+- 多种 Agent 类型选择（SimpleChat / ReAct / PlanExecute）
+- 任务执行状态可视化（任务进度显示）
+- 记忆状态查看
+- 更完善的交互体验
 
 #### 2. 文档分块策略选择
 
@@ -832,6 +844,14 @@ def chat():
 - ✅ ChromaDB 向量数据库支持
 
 ## 更新日志
+
+### v1.2.0 (2026-06-07)
+- 完善 ReActAgent 工具调用集成
+- 完善 PlanExecuteAgent 工具调用集成
+- 新增 `react`、`planner`、`executor` 角色提示词
+- 新增增强版可视化 Web 界面 (`run_web_enhanced.py`)
+- 支持 Agent 类型选择和任务状态可视化
+- 所有 58 个测试通过
 
 ### v1.1.0 (2026-06-07)
 - 新增 ReActAgent（推理-行动循环模式）
