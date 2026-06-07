@@ -4,6 +4,12 @@
 
 ## 功能特点
 
+### 🤖 多类型 Agent 模式
+- **SimpleChatAgent**：基础对话 Agent
+- **ReActAgent**：推理-行动循环模式（Thought-Action-Observation）
+- **PlanExecuteAgent**：规划-执行-监控模式
+- **AgentHub**：多 Agent 协作系统，支持消息路由和角色分工
+
 ### 🧠 核心功能
 - **LLM 适配层**：统一的大语言模型接口，目前支持 DeepSeek（兼容 OpenAI 格式）
 - **真正的流式输出**：不是逐字打印的假流式，而是真正的 SSE 流式传输
@@ -12,7 +18,7 @@
 
 ### 📚 RAG 系统
 - **文档分块**：支持字符分块、段落分块、句子分块多种策略
-- **向量存储**：基于 Embedding 的持久化向量数据库
+- **向量存储**：支持 ChromaDB（高性能，默认）和 JSON 文件（兼容旧版）
 - **智能检索**：支持向量相似度检索和混合检索（向量+关键词）
 - **相似度阈值**：可设置过滤低相关度结果
 
@@ -61,6 +67,7 @@ pip install -r requirements.txt
 | `requests>=2.31.0` | HTTP 请求处理 |
 | `tiktoken>=0.5.0` | Token 计数 |
 | `numpy>=1.20.0` | 数值计算（向量相似度） |
+| `chromadb>=0.4.0` | 高性能向量数据库 |
 | `pytest>=7.0.0` | 单元测试框架（开发用） |
 
 ## 配置说明
@@ -128,6 +135,128 @@ agent = SimpleChatAgent(memory_type="short_term", verbose=False)
 for chunk in agent.chat_stream("写一首关于春天的诗"):
     print(chunk, end="", flush=True)
 print()
+```
+
+### ReAct 模式 Agent（推理-行动循环）
+
+```python
+from agent import ReActAgent
+
+# 创建 ReAct Agent
+agent = ReActAgent(
+    memory_type="short_term",
+    verbose=True,
+    max_iterations=10,  # 最大循环次数防止无限循环
+)
+
+# 执行任务
+response = agent.chat("查询北京今天的天气")
+print(response)
+```
+
+### Plan-Execute 模式 Agent（规划-执行）
+
+```python
+from agent import PlanExecuteAgent
+
+# 创建 Plan-Execute Agent
+agent = PlanExecuteAgent(
+    memory_type="short_term",
+    verbose=True,
+    max_retries=3,
+)
+
+# 执行任务（会自动分解为子任务）
+response = agent.chat("帮我规划北京三日游行程")
+print(response)
+
+# 查看任务执行状态
+status = agent.get_task_status()
+print(status)
+```
+
+### AgentHub 多 Agent 协作
+
+```python
+from agent import (
+    AgentHub,
+    AgentInfo,
+    AgentRole,
+    MessageType,
+    MessageSemantic,
+    AgentMessage,
+)
+from agent import SimpleChatAgent, ReActAgent
+
+# 1. 创建 AgentHub
+hub = AgentHub()
+
+# 2. 注册 Agent 信息
+hub.register_agent(AgentInfo(
+    name="planner",
+    role=AgentRole.PLANNER,
+    description="任务规划专家",
+    input_types=["user_request"],
+    output_types=["task_plan"],
+    capabilities=["task_decomposition", "dependency_analysis"],
+))
+
+hub.register_agent(AgentInfo(
+    name="executor",
+    role=AgentRole.EXECUTOR,
+    description="任务执行专家",
+    input_types=["task_plan"],
+    output_types=["task_result"],
+    capabilities=["tool_use", "task_execution"],
+))
+
+# 3. 注册 Agent 实例
+planner_agent = ReActAgent(verbose=False)
+executor_agent = SimpleChatAgent(verbose=False)
+
+hub.register_agent_instance("planner", planner_agent)
+hub.register_agent_instance("executor", executor_agent)
+
+# 4. 发送消息
+message = hub.create_task_message(
+    sender="user",
+    receiver="planner",
+    content="帮我规划北京三日游",
+    semantic=MessageSemantic.REQUEST,
+)
+hub.send_message(message)
+
+# 5. 获取消息并处理
+messages = hub.get_messages("planner", clear=True)
+for msg in messages:
+    print(f"收到消息: {msg}")
+```
+
+### 向量数据库（ChromaDB）
+
+```python
+from storage.database import Database
+
+# 使用 ChromaDB（默认，高性能）
+db = Database(
+    store_path="data/my_db",
+    backend="chroma",  # 默认值
+    collection_name="my_collection",
+)
+
+# 或使用 JSON（兼容旧版）
+db = Database(
+    store_path="data/my_db",
+    backend="json",
+)
+
+# 添加文档
+chunks = ["文档1", "文档2", "文档3"]
+db.add_documents(chunks)
+
+# 检索
+results = db.query("相关文档", k=2)
+print(results)
 ```
 
 ## 详细使用指南
@@ -421,7 +550,9 @@ project_249/
 │   ├── base.py             # BaseAgent 抽象基类
 │   ├── simple_chat.py      # SimpleChatAgent 实现
 │   ├── react_agent.py      # ReAct 模式 Agent
-│   └── plan_execute.py     # 规划执行模式 Agent
+│   ├── plan_execute.py     # 规划执行模式 Agent
+│   ├── hub.py              # AgentHub 多 Agent 协作系统
+│   └── __init__.py
 ├── llms/                   # LLM 适配层
 │   ├── base.py             # BaseLLM 抽象基类
 │   ├── deepseek_adapter.py # DeepSeek 适配器
@@ -432,7 +563,7 @@ project_249/
 │   ├── long_term.py        # 长期记忆
 │   └── summarizer.py       # 摘要生成器
 ├── storage/                # 存储层
-│   ├── database.py         # 向量数据库
+│   ├── database.py         # 向量数据库（支持 ChromaDB/JSON）
 │   └── RAG/                # RAG 组件
 │       ├── text_splitter.py    # 文档分块器
 │       ├── embeddings.py       # Embedding 服务
@@ -685,6 +816,8 @@ def chat():
 - ✅ `find_files` 工具未注册 → 添加到 `TOOL_POOL`
 - ✅ `json(open(...))` 错误 → `json.load(open(...))`
 - ✅ 硬编码 Windows 路径 → 使用相对路径
+- ✅ 工具调用只返回最后一个结果 → 返回完整列表
+- ✅ `TRUNCATTON` 拼写错误 → `TRUNCATION`
 
 ### 新增功能
 - ✅ 统一日志系统（6 大分类，支持过滤）
@@ -693,8 +826,20 @@ def chat():
 - ✅ 完整的 RAG 系统（分块、存储、检索、生成）
 - ✅ 完善的长期记忆
 - ✅ 58 个单元测试
+- ✅ ReAct 模式 Agent
+- ✅ Plan-Execute 模式 Agent
+- ✅ AgentHub 多 Agent 协作系统
+- ✅ ChromaDB 向量数据库支持
 
 ## 更新日志
+
+### v1.1.0 (2026-06-07)
+- 新增 ReActAgent（推理-行动循环模式）
+- 新增 PlanExecuteAgent（规划-执行-监控模式）
+- 新增 AgentHub 多 Agent 协作系统
+- 新增 ChromaDB 向量数据库支持
+- 修复工具调用和拼写 bug
+- 完善文档和示例
 
 ### v1.0.0 (2026-05-24)
 - 完成 RAG 系统实现
