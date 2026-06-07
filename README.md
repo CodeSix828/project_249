@@ -161,7 +161,7 @@ agent = SimpleChatAgent(
 
 | 策略 | 值 | 说明 |
 |------|-----|------|
-| `TRUNCATTON` | 0 | 简单截断，删除最旧的消息 |
+| `TRUNCATION` | 0 | 简单截断，删除最旧的消息 |
 | `SLIDING_WINDOW` | 1 | 滑动窗口，保留最近的 N 条消息 |
 | `SUMMARY` | 2 | 摘要策略，对旧消息进行摘要压缩 |
 | `REFINE` | 3 | 精炼策略 |

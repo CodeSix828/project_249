@@ -22,7 +22,7 @@ class ShortTermMemory:
         self.historys.append(mem)
 
     def retrieval(self, query: str = ""):
-        if self.strategy == Strategy.TRUNCATTON:
+        if self.strategy == Strategy.TRUNCATION:
             self._apply_truncation()
         elif self.strategy == Strategy.SLIDING_WINDOW:
             self._apply_sliding_window()

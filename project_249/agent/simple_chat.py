@@ -80,7 +80,7 @@ class SimpleChatAgent(BaseAgent):
         tool_messages = parse_function_call(call_tool_response)
         if tool_messages:
             self.logger.tool(f"工具执行结果: {tool_messages}")
-            self.memory.historys.append(tool_messages)
+            self.memory.historys.extend(tool_messages)
 
     def chat(self, user_input: str) -> str:
         self.memory.add({"role": "user", "content": user_input})

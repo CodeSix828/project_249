@@ -3,7 +3,7 @@ from enum import Enum
 
 class Strategy(Enum):
     DEFAULT = -1
-    TRUNCATTON = 0
+    TRUNCATION = 0
     SLIDING_WINDOW = 1
     SUMMARY = 2
     REFINE = 3

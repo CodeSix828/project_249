@@ -37,7 +37,7 @@ class TestShortTermMemory:
         assert len(mem.historys) == 3
 
     def test_truncation_removes_oldest(self, monkeypatch):
-        mem = ShortTermMemory(strategy=Strategy.TRUNCATTON, max_token_num=50)
+        mem = ShortTermMemory(strategy=Strategy.TRUNCATION, max_token_num=50)
         mem.add({"role": "user", "content": "a" * 100})
         mem.add({"role": "user", "content": "b" * 100})
         mem.add({"role": "user", "content": "c"})
@@ -60,7 +60,7 @@ class TestShortTermMemory:
 
 class TestStrategy:
     def test_strategy_values(self):
-        assert Strategy.TRUNCATTON.value == 0
+        assert Strategy.TRUNCATION.value == 0
         assert Strategy.SLIDING_WINDOW.value == 1
         assert Strategy.SUMMARY.value == 2
         assert Strategy.REFINE.value == 3

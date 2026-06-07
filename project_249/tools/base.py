@@ -17,10 +17,10 @@ TOOL_POOL = {
 }
 
 def parse_function_call(message):
-    messages = {}
+    tool_messages = []
     # tool_calls 为工具选择的结果
     if not message.tool_calls:
-        return messages
+        return tool_messages
     for tool_call in message.tool_calls:
         #大模型提取出的工具入参
         args = tool_call.function.arguments
@@ -30,12 +30,12 @@ def parse_function_call(message):
         else:
             function_result = {"error": "未找到可调用的函数"}
         # 将工具调用的结果封装成message, 参与下一次大模型调用
-        messages = {
+        tool_messages.append({
             "role": "tool",
             "content": f"{json.dumps(function_result)}",
             "tool_call_id": tool_call.id
-        }
-    return messages
+        })
+    return tool_messages
 
 '''
 from ..llms.deepseek_function_call import DeepSeekCallTool

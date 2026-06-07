@@ -10,7 +10,7 @@ class EmbeddingService():
         return vector
 
     def get_similarity(self, vector1, vector2):
-        """计算两个向量的欧氏距离"""
+        """计算两个向量的余弦相似度"""
         dot_product = np.dot(vector1, vector2)
         magnitude = np.linalg.norm(vector1) * np.linalg.norm(vector2)
         return dot_product / magnitude if magnitude else 0

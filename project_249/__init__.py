@@ -1,4 +1,17 @@
-from .agent import BaseAgent, SimpleChatAgent
+from .agent import (
+    BaseAgent,
+    SimpleChatAgent,
+    ReActAgent,
+    PlanExecuteAgent,
+    Task,
+    TaskStatus,
+    AgentHub,
+    AgentMessage,
+    AgentInfo,
+    AgentRole,
+    MessageType,
+    MessageSemantic,
+)
 from .llms import BaseLLM, Message, DeepSeekAdapter, DeepSeekCallTool, DeepseekEmbedding
 from .memory import (
     Strategy,
@@ -59,6 +72,16 @@ __all__ = [
     "__version__",
     "BaseAgent",
     "SimpleChatAgent",
+    "ReActAgent",
+    "PlanExecuteAgent",
+    "Task",
+    "TaskStatus",
+    "AgentHub",
+    "AgentMessage",
+    "AgentInfo",
+    "AgentRole",
+    "MessageType",
+    "MessageSemantic",
     "BaseLLM",
     "Message",
     "DeepSeekAdapter",
