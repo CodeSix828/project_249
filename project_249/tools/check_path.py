@@ -3,11 +3,13 @@ from pathlib import Path
 from .path_utils import normalize_path, is_path_allowed
 from .config import WORKDIR_ROOT
 
-def check_path(filepath):
+def check_path(filepath, preview_lines=5, preview_full=False):
     """检测文件或文件夹是否存在及其详细信息
     
     Args:
         filepath: 要检测的路径（支持相对路径和绝对路径）
+        preview_lines: 预览行数（默认5行）
+        preview_full: 是否预览完整文件内容（默认False，仅在预览较小文件时有用）
     
     Returns:
         包含详细信息的字符串
@@ -63,24 +65,29 @@ def check_path(filepath):
         except PermissionError:
             info.append("内容预览: 无权限访问")
     
-    # 如果是文件，显示前几行内容
+    # 如果是文件，显示内容
     elif path_obj.is_file():
         try:
-            # 尝试读取文件前5行（仅文本文件）
+            # 读取文件内容
             with open(full_path, 'r', encoding='utf-8') as f:
-                lines = []
-                for i, line in enumerate(f):
-                    if i < 5:  # 只读取前5行
-                        lines.append(line.rstrip())
-                    else:
-                        break
+                content = f.read()
                 
-                if lines:
-                    info.append("文件内容预览:")
-                    for line in lines:
-                        info.append(f"  {line[:100]}")  # 每行最多显示100个字符
-                    if len(lines) == 5:
-                        info.append("  ...")
+                if preview_full:
+                    # 显示完整内容
+                    info.append("文件内容:")
+                    info.append(content)
+                else:
+                    # 只显示指定行数
+                    lines = content.splitlines()
+                    preview = lines[:preview_lines]
+                    
+                    if preview:
+                        info.append(f"文件内容预览（前{preview_lines}行）:")
+                        for line in preview:
+                            info.append(f"  {line[:200]}")
+                        if len(lines) > preview_lines:
+                            info.append(f"  ... (还有 {len(lines) - preview_lines} 行未显示，共 {len(lines)} 行)")
+                            info.append(f"提示: 如果需要完整内容，请使用 preview_full=True 参数")
         except (UnicodeDecodeError, PermissionError):
             info.append("文件内容预览: 二进制文件或无权限读取")
     

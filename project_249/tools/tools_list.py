@@ -54,7 +54,7 @@ tools = [
     "type": "function",
     "function": {
         "name": "write_to_file",
-        "description": "将文本内容写入文件。默认所有文件操作都在工作目录中进行，可以使用相对路径（如 'test/note.txt'）。只有在用户明确要求且你有权限时，才使用绝对路径（如 'C:/temp/file.txt'）。",
+        "description": "将文本内容写入文件。默认所有文件操作都在工作目录中进行，可以使用相对路径（如 'test/note.txt'）。支持覆盖或追加写入模式。",
         "parameters": {
             "type": "object",
             "properties": {
@@ -65,32 +65,44 @@ tools = [
                 "content": {
                     "type": "string",
                     "description": "要写入文件的文本内容"
+                },
+                "overwrite": {
+                    "type": "boolean",
+                    "description": "是否覆盖原有文件内容 (True=覆盖，False=追加)，默认为 True",
+                    "default": True
                 }
             },
             "required": ["filepath", "content"]
         }
     }
 },
-# check_path 工具定义
 {
     "type": "function",
     "function": {
         "name": "check_path",
-        "description": "检查文件或文件夹是否存在，并返回详细信息（类型、大小、权限、内容预览等）",
+        "description": "检查文件或文件夹是否存在，并返回详细信息（类型、大小、权限、内容预览等）。支持读取完整或部分文件内容。",
         "parameters": {
             "type": "object",
             "properties": {
                 "filepath": {
                     "type": "string",
                     "description": "要检测的路径，可以是相对路径（如 'data/config.json'）或绝对路径"
+                },
+                "preview_lines": {
+                    "type": "integer",
+                    "description": "文件内容预览行数，默认为5行",
+                    "default": 5
+                },
+                "preview_full": {
+                    "type": "boolean",
+                    "description": "是否预览完整文件内容（仅在需要完整信息时设为True），默认为False",
+                    "default": False
                 }
             },
             "required": ["filepath"]
         }
     }
 },
-
-# find_files 工具定义
 {
     "type": "function",
     "function": {
@@ -115,6 +127,30 @@ tools = [
                 }
             },
             "required": ["directory"]
+        }
+    }
+},
+{
+    "type": "function",
+    "function": {
+        "name": "get_current_time",
+        "description": "获取当前系统时间和日期",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        }
+    }
+},
+{
+    "type": "function",
+    "function": {
+        "name": "get_current_date",
+        "description": "获取当前日期（简化版）",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": []
         }
     }
 }

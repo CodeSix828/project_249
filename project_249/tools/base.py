@@ -5,6 +5,7 @@ from .square_calculate import square_calculate
 from .mkdir import mkdir
 from .write_to_file import write_to_file
 from .check_path import check_path, check_multiple_paths, find_files
+from .get_time import get_current_time, get_current_date
 
 TOOL_POOL = {
     "weather_query": weather_query,
@@ -14,6 +15,8 @@ TOOL_POOL = {
     "check_path": check_path,
     "check_multiple_paths": check_multiple_paths,
     "find_files": find_files,
+    "get_current_time": get_current_time,
+    "get_current_date": get_current_date,
 }
 
 def parse_function_call(message):
@@ -57,5 +60,3 @@ def function_call(user_query):
 user_query = "贵港当前天气怎么样？"
 print(function_call(user_query))
 '''
-
-
