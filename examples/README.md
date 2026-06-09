@@ -76,13 +76,53 @@ python examples/04_rag_system.py
 python examples/05_long_term_memory.py
 ```
 
+### 6. ReAct Agent
+**文件**: `06_react_agent.py`
+
+展示 ReAct（思考-行动-观察）模式：
+- 自主决策是否调用工具
+- 多步推理过程
+- 实时信息获取
+
+```bash
+python examples/06_react_agent.py
+```
+
+### 7. Plan-Execute Agent
+**文件**: `07_plan_execute.py`
+
+展示 规划-执行 模式：
+- 将复杂任务分解为子任务
+- 任务依赖关系管理
+- 执行状态和结果报告
+
+```bash
+python examples/07_plan_execute.py
+```
+
+### 8. 错误处理与降级策略
+**文件**: `08_error_handling.py`
+
+展示框架的健壮性：
+- 超时处理
+- 认证失败处理
+- 降级策略
+- 优雅的异常恢复
+
+```bash
+python examples/08_error_handling.py
+```
+
 ## 推荐学习顺序
 
 1. **01_simple_chat.py** - 了解基本用法
 2. **02_stream_output.py** - 了解流式输出
 3. **03_log_control.py** - 了解日志控制
-4. **04_rag_system.py** - 了解 RAG 系统
-5. **05_long_term_memory.py** - 了解长期记忆
+4. **06_react_agent.py** - 了解 ReAct 模式
+5. **07_plan_execute.py** - 了解 Plan-Execute 模式
+6. **08_error_handling.py** - 了解错误处理
+7. **04_rag_system.py** - 了解 RAG 系统
+8. **05_long_term_memory.py** - 了解长期记忆
 
 ## 注意事项
 
