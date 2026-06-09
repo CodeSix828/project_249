@@ -67,14 +67,14 @@ class SimpleChatAgent(BaseAgent):
             self.logger.tool(f"选择使用工具: {call_tool_response.content}")
             self.memory.add({
                 "role": "assistant",
-                "content": f"内部工具选择模型 {call_tool_response.content}",
+                "content": call_tool_response.content,
                 "tool_calls": call_tool_response.tool_calls
             })
         else:
             self.logger.tool("未选择任何工具")
             self.memory.add({
                 "role": "assistant",
-                "content": f"内部工具选择模型 {call_tool_response.content}"
+                "content": call_tool_response.content
             })
         
         tool_messages = parse_function_call(call_tool_response)
@@ -90,7 +90,7 @@ class SimpleChatAgent(BaseAgent):
         
         self.logger.llm("调用主对话模型...")
         response = self.llm.chat(self.memory.historys)
-        self.memory.add({"role": "assistant", "content": f"主对话模型：{response}"})
+        self.memory.add({"role": "assistant", "content": response})
         
         return response
 
