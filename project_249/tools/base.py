@@ -21,22 +21,42 @@ TOOL_POOL = {
 
 def parse_function_call(message):
     tool_messages = []
-    # tool_calls 为工具选择的结果
     if not message.tool_calls:
         return tool_messages
     for tool_call in message.tool_calls:
-        #大模型提取出的工具入参
-        args = tool_call.function.arguments
-        if tool_call.function.name in TOOL_POOL:
-            function = TOOL_POOL[tool_call.function.name]
-            function_result = function(**json.loads(args))
-        else:
-            function_result = {"error": "未找到可调用的函数"}
-        # 将工具调用的结果封装成message, 参与下一次大模型调用
+        tool_name = tool_call.function.name
+        raw_args = tool_call.function.arguments
+
+        try:
+            args = json.loads(raw_args)
+        except (json.JSONDecodeError, TypeError):
+            tool_messages.append({
+                "role": "tool",
+                "content": json.dumps({"error": f"参数解析失败: {raw_args}"}),
+                "tool_call_id": tool_call.id,
+            })
+            continue
+
+        if tool_name not in TOOL_POOL:
+            tool_messages.append({
+                "role": "tool",
+                "content": json.dumps({"error": f"未找到工具: {tool_name}"}),
+                "tool_call_id": tool_call.id,
+            })
+            continue
+
+        function = TOOL_POOL[tool_name]
+        try:
+            function_result = function(**args)
+        except Exception as e:
+            function_result = {
+                "error": f"{type(e).__name__}: {e}"
+            }
+
         tool_messages.append({
             "role": "tool",
-            "content": f"{json.dumps(function_result)}",
-            "tool_call_id": tool_call.id
+            "content": json.dumps(function_result),
+            "tool_call_id": tool_call.id,
         })
     return tool_messages
 

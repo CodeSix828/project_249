@@ -16,11 +16,23 @@ def get_executable_dir() -> Path:
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_ENV_PATH = BASE_DIR / "config" / ".env"
-
+PACKAGE_ENV_PATH = BASE_DIR / "config" / ".env"
+CWD_ENV_PATH = Path.cwd() / ".env"
+USER_ENV_PATH = Path.home() / ".project_249" / ".env"
 EXE_ENV_PATH = get_executable_dir() / ".env"
 
-ENV_PATH = EXE_ENV_PATH if is_frozen() and EXE_ENV_PATH.exists() else DEFAULT_ENV_PATH
+ENV_SEARCH_ORDER = [CWD_ENV_PATH, USER_ENV_PATH, EXE_ENV_PATH, PACKAGE_ENV_PATH]
+
+ENV_PATH = PACKAGE_ENV_PATH
+for candidate in ENV_SEARCH_ORDER:
+    try:
+        if candidate.exists():
+            ENV_PATH = candidate
+            break
+    except OSError:
+        continue
+
+DEFAULT_ENV_PATH = ENV_PATH
 
 
 class Settings(BaseModel):
@@ -96,10 +108,10 @@ def load_settings(
                 file_config = _load_from_env_file(EXE_ENV_PATH)
                 configs.update(file_config)
             else:
-                file_config = _load_from_env_file(DEFAULT_ENV_PATH)
+                file_config = _load_from_env_file(ENV_PATH)
                 configs.update(file_config)
         else:
-            file_config = _load_from_env_file(DEFAULT_ENV_PATH)
+            file_config = _load_from_env_file(ENV_PATH)
             configs.update(file_config)
     
     if use_env_vars:
